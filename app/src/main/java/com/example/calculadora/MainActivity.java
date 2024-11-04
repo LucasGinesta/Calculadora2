@@ -15,7 +15,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView textView;
     private String numeroActual = "";
-    private double resultadoAcumulado = 0;
+    private Calculator calculator;
     private String operacion;
     private boolean nuevaOperacion = true;
 
@@ -24,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -32,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
 
         textView = findViewById(R.id.textView);
         textView.setText("0");
+
+        calculator = new Calculator();
 
         // Asignar listeners a los botones
         findViewById(R.id.button0).setOnClickListener(this::clickNumero);
@@ -45,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button8).setOnClickListener(this::clickNumero);
         findViewById(R.id.button9).setOnClickListener(this::clickNumero);
         findViewById(R.id.buttonMas).setOnClickListener(this::clickOperacion);
+        findViewById(R.id.buttonMenos).setOnClickListener(this::clickOperacion);
+        findViewById(R.id.buttonMultiplicacion).setOnClickListener(this::clickOperacion);
+        findViewById(R.id.buttonDivision).setOnClickListener(this::clickOperacion);
         findViewById(R.id.buttonIgual).setOnClickListener(this::igual);
         findViewById(R.id.buttonC).setOnClickListener(v -> borrar());
     }
@@ -66,46 +72,38 @@ public class MainActivity extends AppCompatActivity {
         if (!numeroActual.isEmpty()) {
             double numero = Double.parseDouble(numeroActual);
 
-            if (operacion != null) { // Si ya hay una operación pendiente, calcula el acumulado
-                resultadoAcumulado = calcularResultado(resultadoAcumulado, numero, operacion);
+            if (operacion != null) {
+                double resultado = calculator.calcular(calculator.getResultadoAcumulado(), numero, operacion);
+                calculator.setResultadoAcumulado(resultado);
             } else { // Primer número ingresado
-                resultadoAcumulado = numero;
+                calculator.setResultadoAcumulado(numero);
             }
 
             operacion = ((Button) view).getText().toString();
-            textView.setText(String.valueOf(resultadoAcumulado));
+            textView.setText(String.valueOf(calculator.getResultadoAcumulado()));
             numeroActual = ""; // Reiniciar el número actual para la siguiente entrada
         }
     }
 
-    // Método para calcular el resultado
+    // Método para calcular el resultado final al presionar igual
     public void igual(View view) {
         if (!numeroActual.isEmpty() && operacion != null) {
             double segundoNumero = Double.parseDouble(numeroActual);
-            resultadoAcumulado = calcularResultado(resultadoAcumulado, segundoNumero, operacion);
+            double resultado = calculator.calcular(calculator.getResultadoAcumulado(), segundoNumero, operacion);
 
-            textView.setText(String.valueOf(resultadoAcumulado));
+            calculator.setResultadoAcumulado(resultado);
+            textView.setText(String.valueOf(resultado));
+
             numeroActual = ""; // Limpiar el número actual
             operacion = null;
             nuevaOperacion = true; // Inicia una nueva operación
         }
     }
 
-    // Método para realizar la operación
-    private double calcularResultado(double num1, double num2, String operacion) {
-        switch (operacion) {
-            case "+":
-                return num1 + num2;
-            // Agregar otros casos si quieres soportar más operaciones
-            default:
-                return num1;
-        }
-    }
-
     // Método para borrar
     public void borrar() {
         numeroActual = "";
-        resultadoAcumulado = 0;
+        calculator.reiniciar();
         operacion = null;
         textView.setText("0");
         nuevaOperacion = true; // Iniciar nueva operación tras borrar
